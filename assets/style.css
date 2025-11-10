@@ -1,35 +1,65 @@
 .kelsie-faq-list {
-  --faq-gap: 1rem;
-  --faq-border: 1px solid #2A1F1A;
-  --faq-radius: 0px;
+  --faq-gap: 0; /* we’ll use borders instead of grid gaps */
+  --faq-border: 1px solid #e5d9e2;
+  --faq-radius: 0;
   --faq-pad: 1rem;
 }
 
 .kelsie-faq-list__items {
-  display: grid;
-  gap: var(--faq-gap);
+  display: block;
 }
 
 .kelsie-faq-list__item {
-  border: var(--faq-border);
-  border-radius: var(--faq-radius);
-  overflow: hidden;
-  background: #FEFEFD;
+  border-bottom: var(--faq-border);
+  background: #fefefd;
 }
 
 .kelsie-faq-list__question {
   cursor: pointer;
   font-weight: 600;
-  padding: var(--faq-pad);
-  list-style: none; /* remove default disclosure triangle space in some browsers */
+  padding: var(--faq-pad) calc(var(--faq-pad) * 1.5) var(--faq-pad) var(--faq-pad);
+  position: relative;
+  list-style: none;
 }
 
-.kelsie-faq-list__item[open] > .kelsie-faq-list__question {
-  border-bottom: var(--faq-border);
+/* Icon – default (+) */
+.kelsie-faq-list__question::after {
+  content: "+";
+  position: absolute;
+  right: var(--faq-pad);
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 0.2s ease, content 0.2s ease;
 }
+
+/* When open, show – instead of + */
+.kelsie-faq-list__item[open] > .kelsie-faq-list__question::after {
+  content: "–";
+}
+
+/* Or if you prefer an arrow instead: */
+/*
+.kelsie-faq-list__question::after {
+  content: "›";
+  transform: translateY(-50%) rotate(90deg);
+  transition: transform 0.2s ease;
+}
+.kelsie-faq-list__item[open] > .kelsie-faq-list__question::after {
+  transform: translateY(-50%) rotate(270deg);
+}
+*/
 
 .kelsie-faq-list__answer {
   padding: var(--faq-pad);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .kelsie-faq-list__meta {
@@ -48,7 +78,6 @@
 
 .kelsie-faq-list__chip {
   border: 1px solid #c785a3;
-  border-radius: 0px;
   padding: .125rem .5rem;
   line-height: 1.6;
   background: #fbf7f9;
