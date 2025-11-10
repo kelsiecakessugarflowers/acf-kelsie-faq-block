@@ -117,4 +117,29 @@
   font-size: .875rem;
   opacity: .8;
 }
+.kelsie-faq-search {
+  margin-bottom: 1rem;
+}
+.kelsie-faq-search__controls {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}
+.kelsie-faq-search__input {
+  flex: 1;
+  padding: .5rem .75rem;
+  border: 1px solid #2A1F1A;
+  background: #FEFEFD;
+}
+.kelsie-faq-search__clear {
+  border: 1px solid #2A1F1A;
+  background: transparent;
+  padding: .5rem .75rem;
+  cursor: pointer;
+}
+.kelsie-faq-search__count {
+  margin-top: .5rem;
+  font-size: .875rem;
+  opacity: .8;
+}
 
