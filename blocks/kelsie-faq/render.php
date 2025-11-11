@@ -48,7 +48,7 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
             }
             // Numeric (term_id)
             if ( is_numeric( $term ) ) {
-                $t = get_term( (int) $term, 'faq_category' );
+               $t = get_term( (int) $term, KELSIE_FAQ_TAX );
                 if ( $t && ! is_wp_error( $t ) ) {
                     $out[] = ['slug' => sanitize_title( $t->slug ), 'label' => sanitize_text_field( $t->name )];
                 }
