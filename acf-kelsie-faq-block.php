@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Kelsie ACF FAQ Block
- * Description: ACF block for FAQ repeater with optional Rank Math schema.
- * Version:     1.0.2
+ * Description: ACF block for FAQ repeater with optional Rank Math schema to be used on different pages with different categories.
+ * Version:     1.0.3
  * Author:      Kelsie Cakes
  */
 
