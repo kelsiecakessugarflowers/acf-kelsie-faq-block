@@ -50,7 +50,12 @@ add_action('init', function () {
     );
 
     // Safe even if ACF is off; render.php guards itself.
-    register_block_type(KELSIE_BLOCK_DIR);
+    register_block_type(
+    KELSIE_BLOCK_DIR,
+    [
+        'render_callback' => 'kelsie_render_faq_block',
+    ]
+);
 });
 
 // Optional: create an ACF Options Page if none exists (harmless if you already have one)
