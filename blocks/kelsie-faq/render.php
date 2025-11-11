@@ -1,123 +1,100 @@
 <?php
-if (!defined('ABSPATH')) exit;
-
 /**
- * Kelsie FAQ Block Render Template
- * - Displays FAQs from ACF Repeater
- * - Local-only search and category filter
- * - Works with Rank Math schema integration
+ * Render callback for Kelsie FAQ block.
+ *
+ * @param array $block The block settings and attributes.
+ * @param string $content The block inner HTML (if there is any).
+ * @param bool $is_preview True during admin preview.
  */
-
-// ACF safety guard
-if (!function_exists('get_field')) {
-    if (!empty($is_preview)) {
-        echo '<div class="kelsie-faq-list__empty"><em>ACF is inactive. Activate ACF to display FAQs.</em></div>';
+function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
+    // Grab all FAQs, preferring per-post repeater then the options page.
+    $faqs = [];
+    if ( have_rows( KELSIE_FAQ_REPEATER ) ) {
+        $context_id = get_the_ID();
+    } elseif ( have_rows( KELSIE_FAQ_REPEATER, KELSIE_OPTIONS_ID ) ) {
+        $context_id = KELSIE_OPTIONS_ID;
+    } else {
+        echo '<p>No FAQs found.</p>';
+        return;
     }
-    return;
-}
 
-// Wrapper + block attributes
-$block_id   = 'faq-list-' . ($block['id'] ?? uniqid());
-$anchor     = !empty($block['anchor']) ? $block['anchor'] : $block_id;
-$class_name = 'kelsie-faq-list';
-if (!empty($block['className'])) $class_name .= ' ' . $block['className'];
-if (!empty($block['align']))     $class_name .= ' align' . $block['align'];
+    // Determine categories to include/exclude
+    $include_terms = get_field( 'include_categories' );
+    $exclude_terms = get_field( 'exclude_categories' );
 
-// Get FAQ rows (post first, fallback to options)
-$current_post_id = get_the_ID();
-$rows = get_field(KELSIE_FAQ_REPEATER, $current_post_id);
-$source = 'post';
-if (empty($rows)) {
-    $rows = get_field(KELSIE_FAQ_REPEATER, KELSIE_OPTIONS_ID);
-    $source = 'option';
-}
+    // Fall back to a per-page field if neither is set on the block
+    if ( empty( $include_terms ) && empty( $exclude_terms ) ) {
+        $include_terms = get_field( 'faq_categories_to_show', get_the_ID() );
+    }
 
-// Show note in editor preview
-if (!empty($is_preview) && !empty($rows)) {
-    echo '<div style="font:12px/1.4 system-ui;opacity:.75;margin-bottom:.5rem;">Rendering FAQs from <strong>' .
-         esc_html($source === 'post' ? 'this post' : 'Options Page') .
-         '</strong>.</div>';
-}
-?>
+    // Normalize to slugs for easier comparison
+    $to_slugs = function ( $terms ) {
+        $slugs = [];
+        if ( empty( $terms ) ) {
+            return [];
+        }
+        foreach ( (array) $terms as $term ) {
+            if ( is_numeric( $term ) ) {
+                $t = get_term( (int) $term, 'faq_category' );
+                if ( $t && ! is_wp_error( $t ) ) {
+                    $slugs[] = $t->slug;
+                }
+            } elseif ( is_object( $term ) && isset( $term->slug ) ) {
+                $slugs[] = $term->slug;
+            }
+        }
+        return $slugs;
+    };
 
-<section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr($class_name); ?>">
+    $include_slugs = $to_slugs( $include_terms );
+    $exclude_slugs = $to_slugs( $exclude_terms );
 
-<?php if (!empty($rows)) : ?>
+    // Collect matching FAQs
+    while ( have_rows( KELSIE_FAQ_REPEATER, $context_id ) ) {
+        the_row();
+        $q = get_sub_field( KELSIE_FAQ_QUESTION );
+        $a = get_sub_field( KELSIE_FAQ_ANSWER );
+        $cats = $to_slugs( get_sub_field( KELSIE_FAQ_CATEGORY ) );
 
-  <!-- Local-only search + filter toolbar -->
-  <div class="kelsie-faq-search" role="search" aria-label="Search FAQs">
-    <label class="kelsie-faq-search__label" for="<?php echo esc_attr($anchor); ?>-faq-search">Search FAQs</label>
-    <div class="kelsie-faq-search__controls">
-      <input
-        id="<?php echo esc_attr($anchor); ?>-faq-search"
-        type="search"
-        class="kelsie-faq-search__input"
-        placeholder="Type to filter questions..."
-        autocomplete="off"
-        spellcheck="false"
-        aria-describedby="<?php echo esc_attr($anchor); ?>-faq-count"
-      />
-      <button type="button" class="kelsie-faq-search__clear" aria-label="Clear search">Clear</button>
-    </div>
-    <div id="<?php echo esc_attr($anchor); ?>-faq-count" class="kelsie-faq-search__count" aria-live="polite"></div>
-  </div>
+        if ( $include_slugs ) {
+            // Row must match at least one include term
+            if ( ! array_intersect( $include_slugs, $cats ) ) {
+                continue;
+            }
+        }
+        if ( $exclude_slugs ) {
+            // Row must not match any excluded term
+            if ( array_intersect( $exclude_slugs, $cats ) ) {
+                continue;
+            }
+        }
 
-  <!-- Category filter dropdown -->
-  <div class="kelsie-faq-list__toolbar" aria-label="FAQ filters">
-    <label class="kelsie-faq-list__control">
-      <span class="kelsie-faq-list__control-label">Category</span>
-      <select class="kelsie-faq-list__filter" aria-controls="<?php echo esc_attr($anchor); ?>">
-        <option value="">All</option>
-        <!-- JS will populate unique categories at runtime -->
-      </select>
-    </label>
-    <span class="kelsie-faq-list__count kelsie-faq-list__count--secondary" aria-live="polite"></span>
-  </div>
+        $faqs[] = [
+            'question' => $q,
+            'answer'   => $a,
+        ];
+    }
 
-  <!-- FAQ items -->
-  <div class="kelsie-faq-list__items" role="list">
-    <?php $i = 0;
-    foreach ($rows as $row) :
-        $i++;
-        $q = isset($row[KELSIE_FAQ_QUESTION]) ? wp_strip_all_tags($row[KELSIE_FAQ_QUESTION]) : '';
-        $a_html = wpautop($row[KELSIE_FAQ_ANSWER] ?? '');
-        $cats = !empty($row[KELSIE_FAQ_CATEGORY]) && is_array($row[KELSIE_FAQ_CATEGORY])
-            ? array_map('sanitize_text_field', $row[KELSIE_FAQ_CATEGORY])
-            : [];
-        $panel_id   = esc_attr($anchor . '-item-' . $i);
-        $summary_id = esc_attr($panel_id . '-summary');
-        $cats_attr = $cats ? strtolower(implode('|', array_map('sanitize_title', $cats))) : '';
-    ?>
-      <details
-        class="kelsie-faq-list__item"
-        id="<?php echo $panel_id; ?>"
-        role="listitem"
-        data-cats="<?php echo esc_attr($cats_attr); ?>"
-      >
-        <summary id="<?php echo $summary_id; ?>" class="kelsie-faq-list__question">
-          <?php echo esc_html($q ?: 'Untitled question'); ?>
-        </summary>
-        <div class="kelsie-faq-list__answer">
-          <?php echo $a_html ?: '<p>(No answer yet.)</p>'; ?>
-          <?php if ($cats) : ?>
-            <div class="kelsie-faq-list__meta">
-              <span class="kelsie-faq-list__label">Category:</span>
-              <?php foreach ($cats as $c) : ?>
-                <span class="kelsie-faq-list__chip"><?php echo esc_html($c); ?></span>
-              <?php endforeach; ?>
+    if ( empty( $faqs ) ) {
+        echo '<p>No FAQs match this filter.</p>';
+        return;
+    }
+
+    // Output markup with your existing styles; this example uses simple HTML
+    echo '<div class="kelsie-faqs" itemscope itemtype="https://schema.org/FAQPage">';
+    foreach ( $faqs as $item ) {
+        ?>
+        <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" itemprop="name">
+                <?php echo esc_html( $item['question'] ); ?>
+            </button>
+            <div class="faq-answer" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+                <div class="faq-answer__inner" itemprop="text">
+                    <?php echo wp_kses_post( wpautop( $item['answer'] ) ); ?>
+                </div>
             </div>
-          <?php endif; ?>
         </div>
-      </details>
-    <?php endforeach; ?>
-  </div>
-
-<?php else : ?>
-
-  <?php if (!empty($is_preview)) : ?>
-    <div class="kelsie-faq-list__empty"><em>No FAQs found. Add rows on this post or in the Options Page.</em></div>
-  <?php endif; ?>
-
-<?php endif; ?>
-
-</section>
+        <?php
+    }
+    echo '</div>';
+}
