@@ -79,7 +79,7 @@ add_action('acf/init', function () {
 
 add_action( 'init', function () {
     register_taxonomy(
-        'faq_category',
+        'faq-category',
         [], // no attached post type
         [
             'label'        => 'FAQ Categories',
