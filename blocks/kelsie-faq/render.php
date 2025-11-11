@@ -81,20 +81,25 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
     }
 
     // Output markup with your existing styles; this example uses simple HTML
-    echo '<div class="kelsie-faqs" itemscope itemtype="https://schema.org/FAQPage">';
-    foreach ( $faqs as $item ) {
-        ?>
-        <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-            <button class="faq-question" itemprop="name">
-                <?php echo esc_html( $item['question'] ); ?>
-            </button>
-            <div class="faq-answer" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <div class="faq-answer__inner" itemprop="text">
-                    <?php echo wp_kses_post( wpautop( $item['answer'] ) ); ?>
-                </div>
+echo '<div class="kelsie-faq-list" itemscope itemtype="https://schema.org/FAQPage">';
+echo '  <div class="kelsie-faq-list__items">';
+
+foreach ( $faqs as $item ) {
+    ?>
+    <details class="kelsie-faq-list__item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <summary class="kelsie-faq-list__question" itemprop="name">
+            <?php echo esc_html( $item['question'] ); ?>
+        </summary>
+        <div class="kelsie-faq-list__answer" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+            <div itemprop="text">
+                <?php echo wp_kses_post( wpautop( $item['answer'] ) ); ?>
             </div>
         </div>
-        <?php
-    }
-    echo '</div>';
+    </details>
+    <?php
+}
+
+echo '  </div>';
+echo '</div>';
+
 }
