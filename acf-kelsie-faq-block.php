@@ -61,22 +61,6 @@ add_action('init', function () {
 );
 });
 
-// Optional: create an ACF Options Page if none exists (harmless if you already have one)
-add_action('acf/init', function () {
-    if (function_exists('acf_add_options_page')) {
-        if (!acf_get_options_pages()) {
-            acf_add_options_page([
-                'page_title' => 'ACF FAQ Repeater Group',
-                'menu_title' => 'ACF FAQ Repeater Group',
-                'menu_slug'  => 'acf-faq-repeater-group',
-                'capability' => 'manage_options',
-                'redirect'   => false,
-                'position'   => 59,
-            ]);
-        }
-    }
-});
-
 add_action( 'init', function () {
     register_taxonomy(
         'faq-category',
