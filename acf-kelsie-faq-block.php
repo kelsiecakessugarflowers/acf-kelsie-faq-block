@@ -1,76 +1,66 @@
 <?php
 /**
- * Plugin Name: Kelsie ACF FAQ Block
- * Description: ACF block for FAQ repeater with optional Rank Math schema for FAQ page and using inside blocks.
- * Version:     1.0.5
+ * Plugin Name: Kelsie ACF Reviews Block
+ * Description: ACF block for displaying Reviews repeater content with optional Rank Math schema integration.
+ * Version:     1.1.1
  * Author:      Kelsie Cakes
  */
 
-if (!defined('ABSPATH')) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /** ---------------------------
  *  CONFIG (edit in one place)
  * --------------------------- */
-define('KELSIE_BLOCK_DIR', __DIR__ . '/blocks/kelsie-faq');
-define('KELSIE_BLOCK_NAME', 'kelsiecakes/faq-list');    // block.json "name"
+define( 'KELSIE_BLOCK_DIR', __DIR__ . '/blocks/kelsie-review' );
+define( 'KELSIE_BLOCK_NAME', 'kelsiecakes/review-list' );    // block.json "name"
 
-define('KELSIE_FAQ_REPEATER', 'faq_acf_repeater');      // repeater
-define('KELSIE_FAQ_QUESTION', 'faq_question');          // sub field (Text)
-define('KELSIE_FAQ_ANSWER',   'faq_answer');            // sub field (WYSIWYG)
-define('KELSIE_FAQ_CATEGORY', 'faq_category');          // sub field (Checkbox)
-define('KELSIE_FAQ_TAX', 'faq-category');      // actual taxonomy slug
+define( 'KELSIE_REVIEW_REPEATER', 'client_testimonials' );      // repeater
+define( 'KELSIE_REVIEW_BODY', 'review_body' );                  // sub field (Text Area)
+define( 'KELSIE_REVIEWER_NAME', 'reviewer_name' );              // sub field (Text)
+define( 'KELSIE_REVIEW_ID', 'review_id' );                      // sub field (Text/ID, schema only)
+define( 'KELSIE_REVIEW_SAMEAS', 'review_original_location' );   // sub field (URL, schema only)
+define( 'KELSIE_REVIEW_RATING', 'rating_number' );              // sub field (Number, schema only)
+define( 'KELSIE_REVIEW_TITLE', 'review_title' );                // sub field (Text, optional frontend)
 
 
 
-define('KELSIE_OPTIONS_ID',   'option');                // ACF Options Page id
-define('KELSIE_SCHEMA_KEY',   'kelsie_faq');            // array key in Rank Math graph
+define( 'KELSIE_OPTIONS_ID', 'option' );          // ACF Options Page id
+define( 'KELSIE_SCHEMA_KEY', 'kelsie_reviews' );  // array key in Rank Math graph
 
-add_action('admin_init', function () {
-    if (!class_exists('ACF') && current_user_can('activate_plugins')) {
-        add_action('admin_notices', function () {
-            echo '<div class="notice notice-error"><p><strong>Kelsie ACF FAQ Block:</strong> ACF is inactive. The block will show a placeholder until ACF is active.</p></div>';
-        });
+add_action( 'admin_init', function () {
+    if ( ! class_exists( 'ACF' ) && current_user_can( 'activate_plugins' ) ) {
+        add_action( 'admin_notices', function () {
+            echo '<div class="notice notice-error"><p><strong>Kelsie ACF Reviews Block:</strong> ACF is inactive. The block will show a placeholder until ACF is active.</p></div>';
+        } );
     }
-});
+} );
 
-add_action('init', function () {
+add_action( 'init', function () {
     // Styles referenced by block.json
-    $style_path        = plugin_dir_path(__FILE__) . 'assets/style.css';
-    $editor_style_path = plugin_dir_path(__FILE__) . 'assets/editor.css';
+    $style_path        = plugin_dir_path( __FILE__ ) . 'assets/style.css';
+    $editor_style_path = plugin_dir_path( __FILE__ ) . 'assets/editor.css';
 
     wp_register_style(
-        'kelsie-faq-block',
-        plugins_url('assets/style.css', __FILE__),
+        'kelsie-review-block',
+        plugins_url( 'assets/style.css', __FILE__ ),
         [],
-        file_exists($style_path) ? filemtime($style_path) : null
+        file_exists( $style_path ) ? filemtime( $style_path ) : null
     );
 
     wp_register_style(
-        'kelsie-faq-block-editor',
-        plugins_url('assets/editor.css', __FILE__),
+        'kelsie-review-block-editor',
+        plugins_url( 'assets/editor.css', __FILE__ ),
         [],
-        file_exists($editor_style_path) ? filemtime($editor_style_path) : null
+        file_exists( $editor_style_path ) ? filemtime( $editor_style_path ) : null
     );
 
     // Safe even if ACF is off; render.php guards itself.
     register_block_type(
-    KELSIE_BLOCK_DIR,
-    [
-        'render_callback' => 'kelsie_render_faq_block',
-    ]
-);
-});
-
-add_action( 'init', function () {
-    register_taxonomy(
-        'faq-category',
-        [], // no attached post type
+        KELSIE_BLOCK_DIR,
         [
-            'label'        => 'FAQ Categories',
-            'public'       => false,
-            'show_ui'      => true,
-            'hierarchical' => true,
-            'show_in_rest' => true,
+            'render_callback' => 'kelsie_render_review_block',
         ]
     );
 });
@@ -79,50 +69,96 @@ add_action( 'init', function () {
 /** ---------------------------
  *  Rank Math integration (optional)
  * --------------------------- */
-add_action('plugins_loaded', function () {
-    if (!defined('RANK_MATH_VERSION')) return;
+add_action( 'plugins_loaded', function () {
+    if ( ! defined( 'RANK_MATH_VERSION' ) ) {
+        return;
+    }
 
-    add_filter('rank_math/json_ld', function ($data, $jsonld) {
-        if (!is_singular()) return $data;
-
-        global $post;
-        if (!$post || !function_exists('has_block') || !has_block(KELSIE_BLOCK_NAME, $post)) {
+    add_filter( 'rank_math/json_ld', function ( $data, $jsonld ) {
+        if ( ! is_singular() ) {
             return $data;
         }
-        if (!function_exists('have_rows')) return $data; // ACF off
+
+        global $post;
+        if ( ! $post || ! function_exists( 'has_block' ) || ! has_block( KELSIE_BLOCK_NAME, $post ) ) {
+            return $data;
+        }
+        if ( ! function_exists( 'have_rows' ) ) {
+            return $data; // ACF off
+        }
 
         // Prefer per-post rows; fall back to Options Page.
         $source = null;
-        if (have_rows(KELSIE_FAQ_REPEATER, $post->ID)) {
-            $source = [KELSIE_FAQ_REPEATER, $post->ID];
-        } elseif (have_rows(KELSIE_FAQ_REPEATER, KELSIE_OPTIONS_ID)) {
-            $source = [KELSIE_FAQ_REPEATER, KELSIE_OPTIONS_ID];
+        if ( have_rows( KELSIE_REVIEW_REPEATER, $post->ID ) ) {
+            $source = [ KELSIE_REVIEW_REPEATER, $post->ID ];
+        } elseif ( have_rows( KELSIE_REVIEW_REPEATER, KELSIE_OPTIONS_ID ) ) {
+            $source = [ KELSIE_REVIEW_REPEATER, KELSIE_OPTIONS_ID ];
         } else {
             return $data;
         }
 
-        $faq = ['@type' => 'FAQPage', 'mainEntity' => []];
+        $item_reviewed = [
+            '@type' => 'CreativeWork',
+            '@id'   => esc_url_raw( get_permalink( $post ) . '#item' ),
+            'name'  => wp_strip_all_tags( get_the_title( $post ) ),
+            'url'   => get_permalink( $post ),
+        ];
 
-        while (have_rows($source[0], $source[1])) {
+        $reviews = [];
+
+        while ( have_rows( $source[0], $source[1] ) ) {
             the_row();
-            $q = trim(wp_strip_all_tags(get_sub_field(KELSIE_FAQ_QUESTION)));
-            $a = trim(wp_strip_all_tags(wpautop(get_sub_field(KELSIE_FAQ_ANSWER))));
-            if ($q && $a) {
-                $faq['mainEntity'][] = [
-                    '@type' => 'Question',
-                    'name'  => $q,
-                    'acceptedAnswer' => [
-                        '@type' => 'Answer',
-                        'text'  => $a,
-                    ],
+            $body     = trim( wp_strip_all_tags( wpautop( get_sub_field( KELSIE_REVIEW_BODY ) ) ) );
+            $reviewer = trim( wp_strip_all_tags( get_sub_field( KELSIE_REVIEWER_NAME ) ) );
+            if ( ! $body || ! $reviewer ) {
+                continue;
+            }
+
+            $title     = trim( wp_strip_all_tags( get_sub_field( KELSIE_REVIEW_TITLE ) ) );
+            $rating    = get_sub_field( KELSIE_REVIEW_RATING );
+            $same_as   = esc_url_raw( get_sub_field( KELSIE_REVIEW_SAMEAS ) );
+            $review_id = get_sub_field( KELSIE_REVIEW_ID );
+
+            $review = [
+                '@type'        => 'Review',
+                'reviewBody'   => $body,
+                'author'       => [
+                    '@type' => 'Person',
+                    'name'  => $reviewer,
+                ],
+                'itemReviewed' => $item_reviewed,
+            ];
+
+            if ( $title ) {
+                $review['name'] = $title;
+            }
+
+            $rating_value = is_numeric( $rating ) ? (float) $rating : null;
+            if ( null !== $rating_value ) {
+                $rating_value            = max( 0, min( 5, $rating_value ) );
+                $review['reviewRating'] = [
+                    '@type'       => 'Rating',
+                    'ratingValue' => $rating_value,
+                    'bestRating'  => 5,
+                    'worstRating' => 0,
                 ];
             }
+
+            if ( $same_as ) {
+                $review['sameAs'] = $same_as;
+            }
+
+            if ( $review_id ) {
+                $review['@id'] = esc_url_raw( get_permalink( $post ) . '#review-' . sanitize_title( $review_id ) );
+            }
+
+            $reviews[] = $review;
         }
 
-        if (!empty($faq['mainEntity'])) {
-            $data[KELSIE_SCHEMA_KEY] = $faq; // append, don’t overwrite
+        if ( ! empty( $reviews ) ) {
+            $data[ KELSIE_SCHEMA_KEY ] = array_values( $reviews ); // append, don’t overwrite
         }
 
         return $data;
-    }, 20, 2);
-});
+    }, 20, 2 );
+} );
