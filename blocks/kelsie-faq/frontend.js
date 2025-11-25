@@ -72,7 +72,7 @@
       });
 
       if (count) {
-        count.textContent = visible === 1 ? '1 FAQ' : `${visible} FAQs`;
+        count.textContent = visible === 1 ? '1 review' : `${visible} reviews`;
       }
     }
 

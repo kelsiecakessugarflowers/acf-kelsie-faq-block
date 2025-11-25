@@ -8,13 +8,16 @@ if (!defined('ABSPATH')) { exit; }
  * - KELSIE_FAQ_REPEATER
  * - KELSIE_FAQ_QUESTION
  * - KELSIE_FAQ_ANSWER
- * - KELSIE_FAQ_CATEGORY  (ACF taxonomy/select; can return terms, IDs, or strings)
- * - KELSIE_OPTIONS_ID    (Options page ID for fallback)
+ * - KELSIE_FAQ_CATEGORY   (ACF taxonomy/select; can return terms, IDs, or strings)
+ * - KELSIE_OPTIONS_ID     (Options page ID for fallback)
  *
  * Optional ACF fields on the block or page:
  * - include_categories   (array of terms/IDs/slugs)
  * - exclude_categories   (array of terms/IDs/slugs)
  * - faq_categories_to_show (page-level fallback include list)
+ * - faq_reviewer_name    (per-row reviewer label)
+ * - faq_reviewer_url     (per-row profile URL for sameAs)
+ * - faq_rating           (per-row numeric rating 0-5)
  */
 
 function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
@@ -22,7 +25,7 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
     // 0) Guard: ACF inactive
     if ( ! function_exists('get_field') ) {
         if ( ! empty($is_preview) ) {
-            echo '<div class="kelsie-faq-list__empty"><em>ACF is inactive. Activate ACF to display FAQs.</em></div>';
+            echo '<div class="kelsie-faq-list__empty"><em>ACF is inactive. Activate ACF to display reviews.</em></div>';
         }
         return;
     }
@@ -30,7 +33,7 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
     // 1) Wrapper attributes
     $block_id   = 'faq-list-' . ( $block['id'] ?? uniqid() );
     $anchor     = ! empty( $block['anchor'] ) ? $block['anchor'] : $block_id;
-    $class_name = 'kelsie-faq-list';
+    $class_name = 'kelsie-faq-list kelsie-faq-list--reviews';
     if ( ! empty( $block['className'] ) ) $class_name .= ' ' . $block['className'];
     if ( ! empty( $block['align'] ) )     $class_name .= ' align' . $block['align'];
 
@@ -94,7 +97,7 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
         $source     = 'option';
     } else {
         if ( ! empty($is_preview) ) {
-            echo '<div class="kelsie-faq-list__empty"><em>No FAQs found. Add rows on this post or in the Options Page.</em></div>';
+            echo '<div class="kelsie-faq-list__empty"><em>No reviews found. Add rows on this post or in the Options Page.</em></div>';
         }
         return;
     }
@@ -121,6 +124,9 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
         $a_raw = get_sub_field( KELSIE_FAQ_ANSWER );
         $cats  = get_sub_field( KELSIE_FAQ_CATEGORY );  // may be term objects, IDs, strings, or arrays
         $cats_n = $to_terms( $cats );
+        $reviewer  = get_sub_field( 'faq_reviewer_name' );
+        $same_as   = get_sub_field( 'faq_reviewer_url' );
+        $rating_raw = get_sub_field( 'faq_rating' );
 
         $cat_slugs = array_map( fn($t) => $t['slug'], $cats_n );
 
@@ -133,15 +139,23 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
             continue;
         }
 
+        $rating_val = null;
+        if ( is_numeric( $rating_raw ) ) {
+            $rating_val = max( 0, min( 5, (float) $rating_raw ) );
+        }
+
         $items[] = [
             'question' => is_string($q_raw) ? trim( wp_strip_all_tags($q_raw) ) : '',
             'answer'   => is_string($a_raw) ? $a_raw : '',
             'cats'     => $cats_n, // ['slug','label']
+            'reviewer' => is_string( $reviewer ) ? trim( wp_strip_all_tags( $reviewer ) ) : '',
+            'same_as'  => is_string( $same_as ) ? esc_url_raw( $same_as ) : '',
+            'rating'   => $rating_val,
         ];
     }
 
     if ( empty($items) ) {
-        echo '<div class="kelsie-faq-list__empty"><em>No FAQs match the current filters.</em></div>';
+        echo '<div class="kelsie-faq-list__empty"><em>No reviews match the current filters.</em></div>';
         return;
     }
 
@@ -156,16 +170,16 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
 
     // Editor hint
     if ( $is_preview ) {
-        echo '<div style="font:12px/1.4 system-ui;opacity:.75;margin-bottom:.5rem;">Rendering FAQs from <strong>'
+        echo '<div style="font:12px/1.4 system-ui;opacity:.75;margin-bottom:.5rem;">Rendering reviews from <strong>'
            . esc_html( $source === 'post' ? 'this post' : 'Options Page' )
            . '</strong>.</div>';
     }
     ?>
 
-    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr($class_name); ?>" itemscope itemtype="https://schema.org/FAQPage">
+    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr($class_name); ?>">
 
         <!-- Toolbar: Category, Search, Count (local-only; no form/role to avoid 3rd-party search hijacks) -->
-        <div class="kelsie-faq-list__toolbar" aria-label="FAQ filters">
+        <div class="kelsie-faq-list__toolbar" aria-label="Review filters">
             <label class="kelsie-faq-list__control">
                 <span class="kelsie-faq-list__control-label">Category</span>
                 <select class="kelsie-faq-list__filter" aria-controls="<?php echo esc_attr($anchor); ?>">
@@ -195,9 +209,12 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
             $i = 0;
             foreach ($items as $it):
                 $i++;
-                $q      = $it['question'] ?: 'Untitled question';
+                $q      = $it['question'] ?: 'Untitled review';
                 $a_html = wpautop( $it['answer'] );
                 $cat_attr = '';
+                $reviewer = $it['reviewer'];
+                $same_as  = $it['same_as'];
+                $rating   = $it['rating'];
                 $chips    = '';
 
                 if ( ! empty($it['cats']) ) {
@@ -211,52 +228,99 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
                 $panel_id   = esc_attr($anchor . '-item-' . $i);
                 $summary_id = esc_attr($panel_id . '-summary');
             ?>
-            <details class="kelsie-faq-list__item"
+            <article class="kelsie-faq-list__item"
                      id="<?php echo $panel_id; ?>"
                      role="listitem"
                      data-cats="<?php echo esc_attr($cat_attr); ?>"
-                     itemscope
-                     itemprop="mainEntity"
-                     itemtype="https://schema.org/Question">
-                <summary id="<?php echo $summary_id; ?>" class="kelsie-faq-list__question" itemprop="name">
-                    <?php echo esc_html($q); ?>
-                </summary>
-                <div class="kelsie-faq-list__answer"
-                     itemscope
-                     itemprop="acceptedAnswer"
-                     itemtype="https://schema.org/Answer">
-                    <div class="kelsie-faq-list__answer-inner" itemprop="text">
-                        <?php echo wp_kses_post( $a_html ?: '<p>(No answer yet.)</p>' ); ?>
-                    </div>
-                    <?php if ($chips): ?>
-                        <div class="kelsie-faq-list__meta">
-                            <span class="kelsie-faq-list__label">Category:</span>
-                            <?php echo $chips; // escaped above ?>
-                        </div>
+                     aria-labelledby="<?php echo esc_attr($summary_id); ?>">
+                <div class="kelsie-faq-list__header">
+                    <h3 id="<?php echo esc_attr($summary_id); ?>" class="kelsie-faq-list__question">
+                        <?php echo esc_html($q); ?>
+                    </h3>
+                    <?php if ( null !== $rating ): ?>
+                        <p class="kelsie-faq-list__rating" aria-label="Rating: <?php echo esc_attr( $rating ); ?> out of 5">
+                            <span aria-hidden="true">★</span>
+                            <strong><?php echo esc_html( $rating ); ?></strong>
+                            <span aria-hidden="true">/5</span>
+                        </p>
                     <?php endif; ?>
                 </div>
-            </details>
+                <div class="kelsie-faq-list__answer">
+                    <div class="kelsie-faq-list__answer-inner">
+                        <?php echo wp_kses_post( $a_html ?: '<p>(No review text yet.)</p>' ); ?>
+                    </div>
+                    <div class="kelsie-faq-list__meta">
+                        <?php if ( $reviewer ): ?>
+                            <span class="kelsie-faq-list__label">Reviewer:</span>
+                            <span class="kelsie-faq-list__reviewer">
+                                <?php if ( $same_as ): ?>
+                                    <a href="<?php echo esc_url( $same_as ); ?>" rel="nofollow noopener" target="_blank"><?php echo esc_html( $reviewer ); ?></a>
+                                <?php else: ?>
+                                    <?php echo esc_html( $reviewer ); ?>
+                                <?php endif; ?>
+                            </span>
+                        <?php endif; ?>
+                        <?php if ($chips): ?>
+                            <span class="kelsie-faq-list__label">Category:</span>
+                            <?php echo $chips; // escaped above ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </article>
             <?php endforeach; ?>
         </div>
 
         <?php
-        // 7) JSON-LD (plain text only for safety)
-        $ld = [
-            '@context'    => 'https://schema.org',
-            '@type'       => 'FAQPage',
-            'mainEntity'  => array_values(array_map(function($it) {
-                return [
-                    '@type' => 'Question',
-                    'name'  => wp_strip_all_tags($it['question']),
-                    'acceptedAnswer' => [
-                        '@type' => 'Answer',
-                        'text'  => wp_strip_all_tags($it['answer']),
-                    ],
+        // 7) JSON-LD (plain text only for safety) — only emit if Rank Math is not available
+        if ( ! defined( 'RANK_MATH_VERSION' ) ) {
+            $permalink = function_exists( 'get_permalink' ) ? get_permalink() : '';
+            $graph = [];
+
+            foreach ( array_values( $items ) as $idx => $it ) {
+                $node = [
+                    '@type'      => 'Review',
+                    'name'       => $it['question'] ?: 'Review ' . ( $idx + 1 ),
+                    'reviewBody' => wp_strip_all_tags( $it['answer'] ),
                 ];
-            }, $items)),
-        ];
+
+                if ( $permalink ) {
+                    $node['@id'] = trailingslashit( $permalink ) . '#review-' . ( $idx + 1 );
+                }
+
+                if ( $it['reviewer'] ) {
+                    $node['author'] = [
+                        '@type' => 'Person',
+                        'name'  => $it['reviewer'],
+                    ];
+                }
+
+                if ( $it['same_as'] ) {
+                    $node['sameAs'] = $it['same_as'];
+                }
+
+                if ( null !== $it['rating'] ) {
+                    $node['reviewRating'] = [
+                        '@type'       => 'Rating',
+                        'ratingValue' => $it['rating'],
+                        'bestRating'  => 5,
+                        'worstRating' => 1,
+                    ];
+                }
+
+                $graph[] = $node;
+            }
+
+            if ( ! empty( $graph ) ) {
+                $ld = [
+                    '@context' => 'https://schema.org',
+                    '@graph'   => $graph,
+                ];
+                ?>
+                <script type="application/ld+json"><?php echo wp_json_encode( $ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?></script>
+                <?php
+            }
+        }
         ?>
-        <script type="application/ld+json"><?php echo wp_json_encode( $ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?></script>
     </section>
     <?php
 }

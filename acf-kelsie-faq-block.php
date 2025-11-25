@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kelsie ACF FAQ Block
  * Description: ACF block for FAQ repeater with optional Rank Math schema for FAQ page and using inside blocks.
- * Version:     1.0.5
+ * Version:     1.0.6
  * Author:      Kelsie Cakes
  */
 
@@ -101,26 +101,62 @@ add_action('plugins_loaded', function () {
             return $data;
         }
 
-        $faq = ['@type' => 'FAQPage', 'mainEntity' => []];
+        $reviews = [];
+        $permalink = get_permalink($post);
+        $i = 0;
 
         while (have_rows($source[0], $source[1])) {
             the_row();
             $q = trim(wp_strip_all_tags(get_sub_field(KELSIE_FAQ_QUESTION)));
             $a = trim(wp_strip_all_tags(wpautop(get_sub_field(KELSIE_FAQ_ANSWER))));
-            if ($q && $a) {
-                $faq['mainEntity'][] = [
-                    '@type' => 'Question',
-                    'name'  => $q,
-                    'acceptedAnswer' => [
-                        '@type' => 'Answer',
-                        'text'  => $a,
-                    ],
+            $reviewer = trim(wp_strip_all_tags((string) get_sub_field('faq_reviewer_name')));
+            $same_as  = esc_url_raw((string) get_sub_field('faq_reviewer_url'));
+            $rating_raw = get_sub_field('faq_rating');
+            $rating_val = is_numeric($rating_raw) ? max(0, min(5, (float) $rating_raw)) : null;
+
+            if (!$q && !$a) {
+                continue;
+            }
+
+            $i++;
+            $review = [
+                '@type' => 'Review',
+                'name'  => $q ?: 'Review ' . $i,
+            ];
+
+            if ($permalink) {
+                $review['@id'] = trailingslashit($permalink) . '#review-' . $i;
+            }
+
+            if ($a) {
+                $review['reviewBody'] = $a;
+            }
+
+            if ($reviewer) {
+                $review['author'] = [
+                    '@type' => 'Person',
+                    'name'  => $reviewer,
                 ];
             }
+
+            if ($same_as) {
+                $review['sameAs'] = $same_as;
+            }
+
+            if (null !== $rating_val) {
+                $review['reviewRating'] = [
+                    '@type'       => 'Rating',
+                    'ratingValue' => $rating_val,
+                    'bestRating'  => 5,
+                    'worstRating' => 1,
+                ];
+            }
+
+            $reviews[] = $review;
         }
 
-        if (!empty($faq['mainEntity'])) {
-            $data[KELSIE_SCHEMA_KEY] = $faq; // append, don’t overwrite
+        if (!empty($reviews)) {
+            $data[KELSIE_SCHEMA_KEY] = $reviews; // append, don’t overwrite
         }
 
         return $data;
