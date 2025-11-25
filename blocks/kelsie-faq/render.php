@@ -76,8 +76,9 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
 
     // Editor hint
     if ( $is_preview ) {
+        $source_label = $source === 'option' ? 'Options Page' : 'this block';
         echo '<div style="font:12px/1.4 system-ui;opacity:.75;margin-bottom:.5rem;">Rendering reviews from <strong>'
-           . esc_html( $source === 'block' ? 'this block' : 'Options Page' )
+           . esc_html( $source_label )
            . '</strong>.</div>';
     }
     ?>
