@@ -1,8 +1,8 @@
 .kelsie-review-list {
-  --review-gap: 2rem; 
-  --review-border: 1px solid #E5D9E2; 
+  --review-gap: 2rem; /* More spacing between reviews */
+  --review-border: 1px solid #E5D9E2; /* Soft Orchid border */
   --review-pad: clamp(1.25rem, 3vw, 2rem);
-  --review-bg: #FFF9FC; 
+  --review-bg: #f4f0f7;
 }
 
 .kelsie-review-list__items {
@@ -34,6 +34,7 @@
   color: #492C38;
   font-size: 1.1rem;
   line-height: 1.6;
+	padding-left:.25em;
 }
 
 .kelsie-review__body p:last-child {
@@ -46,7 +47,8 @@
   font-size: 1rem;
   color: #2A1F1A;
   font-style: normal;
-  text-transform:uppercase;
+	text-transform: uppercase;
+  font-family:'source serif 4', serif;
 }
 
 /* Empty message */
@@ -57,21 +59,21 @@
 
 .kelsie-review__body {
   position: relative;
-  padding-top: 1.5rem;
+  padding-top: 2rem;
 }
 
 .kelsie-review__body::before {
   content: "“"; /* Fancy opening quote */
   position: absolute;
-  top: -0.4rem;
-  left: -0.1rem;
+  top: -1.5rem;
+  left: -1rem;
   font-size: 4rem;
-  line-height: 1;
-  color: #ad985d;
+  line-height: 1.2;
+  color: #bc6d91;
   opacity: 0.8;
   font-family: 'Source Serif 4', serif;
-  font-weight:600;
   pointer-events: none;
+	font-weight:600;
 }
 
 
