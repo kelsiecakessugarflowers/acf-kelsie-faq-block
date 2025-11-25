@@ -1,5 +1,5 @@
 <?php
-if (!defined('ABSPATH')) { exit; }
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
  * Kelsie FAQ Block — unified render
@@ -17,6 +17,7 @@ if (!defined('ABSPATH')) { exit; }
  * - faq_categories_to_show (page-level fallback include list)
  */
 
+if ( ! function_exists( 'kelsie_render_faq_block' ) ) {
 function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
 
     // 0) Guard: ACF inactive
@@ -286,6 +287,7 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
         ?>
     </section>
     <?php
+}
 }
 
 // Important: ACF "Render Template" mode includes this file; if it’s included, call directly:
