@@ -1,8 +1,8 @@
 .kelsie-review-list {
-  --review-gap: 1.25rem;
-  --review-border: 1px solid #e5d9e2;
-  --review-radius: 6px;
-  --review-pad: 1rem;
+  --review-gap: 2rem; /* More spacing between reviews */
+  --review-border: 1px solid #E5D9E2; /* Soft Orchid border */
+  --review-pad: clamp(1.25rem, 3vw, 2rem);
+  --review-bg: #FFF9FC; /* SFK ivory/pink background */
 }
 
 .kelsie-review-list__items {
@@ -10,34 +10,58 @@
   gap: var(--review-gap);
 }
 
+/* Review container */
 .kelsie-review {
   border: var(--review-border);
-  border-radius: var(--review-radius);
-  background: #fefefd;
+  border-radius: 0; /* No rounded corners */
+  background: var(--review-bg);
   padding: var(--review-pad);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove the header/title entirely */
+.kelsie-review__title {
+  display: none !important;
 }
 
 .kelsie-review__header {
-  margin: 0 0 0.5rem;
-}
-
-.kelsie-review__title {
-  margin: 0 0 0.25rem;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.kelsie-review__byline {
   margin: 0;
-  font-size: 0.95rem;
-  color: #4b3d33;
+}
+
+/* Review body text */
+.kelsie-review__body {
+  color: #492C38; /* deep plum */
+  font-size: 1.05rem;
+  line-height: 1.65;
 }
 
 .kelsie-review__body p:last-child {
   margin-bottom: 0;
 }
 
+/* Reviewer name at the bottom */
+.kelsie-review__byline {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  color: #6B7B65; /* muted sage */
+  font-style: normal;
+  order: 99; /* ensures it sits at the bottom */
+}
+
+/* Empty message */
 .kelsie-review-list__empty {
   opacity: 0.7;
   font-style: italic;
+}
+
+/* Mobile optimization */
+@media (max-width: 600px) {
+  .kelsie-review {
+    padding: 1.25rem;
+  }
+
+  .kelsie-review__body {
+    font-size: 1rem;
+  }
 }
