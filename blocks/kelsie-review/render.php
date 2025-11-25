@@ -127,15 +127,16 @@ if ( ! function_exists( 'kelsie_render_review_block' ) ) {
                 $reviewer  = $item['reviewer'];
                 $body_html = $item['body'];
                 ?>
-                <article class="kelsie-review" role="listitem">
-                    <header class="kelsie-review__header">
-                        <h3 class="kelsie-review__title"><?php echo esc_html( $title ); ?></h3>
-                        <p class="kelsie-review__byline">Review by <span class="kelsie-review__reviewer"><?php echo esc_html( $reviewer ); ?></span></p>
-                    </header>
-                    <div class="kelsie-review__body">
-                        <?php echo wp_kses_post( $body_html ); ?>
-                    </div>
-                </article>
+<article class="kelsie-review" role="listitem">
+    <div class="kelsie-review__body">
+        <?php echo wp_kses_post( $body_html ); ?>
+    </div>
+
+    <p class="kelsie-review__byline">
+        — <span class="kelsie-review__reviewer"><?php echo esc_html( $reviewer ); ?></span>
+    </p>
+</article>
+
             <?php endforeach; ?>
         </div>
 
