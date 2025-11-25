@@ -156,7 +156,9 @@ add_action( 'plugins_loaded', function () {
         }
 
         if ( ! empty( $reviews ) ) {
-            $data[ KELSIE_SCHEMA_KEY ] = array_values( $reviews ); // append, don’t overwrite
+            foreach ( array_values( $reviews ) as $index => $review ) {
+                $data[ KELSIE_SCHEMA_KEY . '_' . ( $index + 1 ) ] = $review; // append, don’t overwrite
+            }
         }
 
         return $data;
