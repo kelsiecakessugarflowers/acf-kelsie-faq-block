@@ -33,9 +33,6 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
     if ( $block_context_id && have_rows( KELSIE_REVIEW_REPEATER, $block_context_id ) ) {
         $context_id = $block_context_id;
         $source     = 'block';
-    } elseif ( have_rows( KELSIE_REVIEW_REPEATER, get_the_ID() ) ) {
-        $context_id = get_the_ID();
-        $source     = 'post';
     } elseif ( have_rows( KELSIE_REVIEW_REPEATER, KELSIE_OPTIONS_ID ) ) {
         $context_id = KELSIE_OPTIONS_ID;
         $source     = 'option';
@@ -79,8 +76,9 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
 
     // Editor hint
     if ( $is_preview ) {
+        $source_label = $source === 'option' ? 'Options Page' : 'this block';
         echo '<div style="font:12px/1.4 system-ui;opacity:.75;margin-bottom:.5rem;">Rendering reviews from <strong>'
-           . esc_html( $source === 'post' ? 'this post' : 'Options Page' )
+           . esc_html( $source_label )
            . '</strong>.</div>';
     }
     ?>
