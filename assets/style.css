@@ -1,5 +1,5 @@
 .kelsie-review-list {
-  --review-gap: 2rem; /* More spacing between reviews */
+  --review-gap: 4rem; /* More spacing between reviews */
   --review-border: 1px solid #E5D9E2; /* Soft Orchid border */
   --review-pad: clamp(1.25rem, 3vw, 2rem);
   --review-bg: #f4f0f7;
@@ -72,7 +72,7 @@
   font-size: 4rem;
   line-height: 1.2;
   color: #bc6d91;
-  opacity: 0.8;
+  opacity: 0.6;
   font-family: 'Source Serif 4', serif;
   pointer-events: none;
 	font-weight:600;
