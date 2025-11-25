@@ -16,12 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - KELSIE_REVIEW_TITLE
  * - KELSIE_OPTIONS_ID
  */
-function kelsie_render_review_block( $block, $content = '', $is_preview = false ) {
-    // 0) Guard: ACF inactive
-    if ( ! function_exists( 'get_field' ) ) {
-        if ( ! empty( $is_preview ) ) {
-            echo '<div class="kelsie-review-list__empty"><em>ACF is inactive. Activate ACF to display reviews.</em></div>';
-        }
+if ( ! function_exists( 'kelsie_render_review_block' ) ) {
+    function kelsie_render_review_block( $block, $content = '', $is_preview = false ) {
+        // 0) Guard: ACF inactive
+        if ( ! function_exists( 'get_field' ) ) {
+            if ( ! empty( $is_preview ) ) {
+                echo '<div class="kelsie-review-list__empty"><em>ACF is inactive. Activate ACF to display reviews.</em></div>';
+            }
         return;
     }
 
@@ -199,6 +200,7 @@ function kelsie_render_review_block( $block, $content = '', $is_preview = false 
         ?>
     </section>
     <?php
+    }
 }
 
 // Important: ACF "Render Template" mode includes this file; if it’s included, call directly:
