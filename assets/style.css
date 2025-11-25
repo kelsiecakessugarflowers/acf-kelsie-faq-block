@@ -143,3 +143,17 @@
   opacity: .8;
 }
 
+.kelsie-faq-list__answer a,
+.kelsie-faq-list__answer .wp-element-button {
+  display: inline-block;
+  padding: 0.65rem 1rem;
+  background: #916379;
+  color: #fff;
+  border-radius: 0px;
+  text-decoration: none;
+  font-weight: 400;
+}
+.kelsie-faq-list__answer a:hover,
+.kelsie-faq-list__answer .wp-element-button:hover {
+  background: #854767;
+}
