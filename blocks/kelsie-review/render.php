@@ -26,10 +26,14 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
     if ( ! empty( $block['align'] ) )     $class_name .= ' align' . $block['align'];
 
     // 2) Choose source: post repeater first, fallback to options
-    $context_id = null;
-    $source     = null;
+    $context_id       = null;
+    $source           = null;
+    $block_context_id = $block['id'] ?? null;
 
-    if ( have_rows( KELSIE_REVIEW_REPEATER ) ) {
+    if ( $block_context_id && have_rows( KELSIE_REVIEW_REPEATER, $block_context_id ) ) {
+        $context_id = $block_context_id;
+        $source     = 'block';
+    } elseif ( have_rows( KELSIE_REVIEW_REPEATER, get_the_ID() ) ) {
         $context_id = get_the_ID();
         $source     = 'post';
     } elseif ( have_rows( KELSIE_REVIEW_REPEATER, KELSIE_OPTIONS_ID ) ) {

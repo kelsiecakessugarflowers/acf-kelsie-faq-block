@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kelsie ACF FAQ Block
  * Description: ACF block for FAQ repeater with optional Rank Math schema for FAQ page and using inside blocks.
- * Version:     1.0.6
+ * Version:     1.0.7
  * Author:      Kelsie Cakes
  */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
 /** ---------------------------
  *  CONFIG (edit in one place)
  * --------------------------- */
-define('KELSIE_BLOCK_DIR', __DIR__ . '/blocks/kelsie-faq');
+define('KELSIE_BLOCK_DIR', __DIR__ . '/blocks/kelsie-review');
 define('KELSIE_BLOCK_NAME', 'kelsiecakes/faq-list');    // block.json "name"
 
 define('KELSIE_FAQ_REPEATER', 'faq_acf_repeater');      // repeater
