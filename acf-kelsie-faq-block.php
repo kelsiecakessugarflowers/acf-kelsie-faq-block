@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kelsie ACF FAQ Block
  * Description: ACF block for FAQ repeater with optional Rank Math schema for FAQ page and using inside blocks.
- * Version:     1.0.5
+ * Version:     1.0.6
  * Author:      Kelsie Cakes
  */
 
@@ -19,6 +19,15 @@ define('KELSIE_FAQ_QUESTION', 'faq_question');          // sub field (Text)
 define('KELSIE_FAQ_ANSWER',   'faq_answer');            // sub field (WYSIWYG)
 define('KELSIE_FAQ_CATEGORY', 'faq_category');          // sub field (Checkbox)
 define('KELSIE_FAQ_TAX', 'faq-category');      // actual taxonomy slug
+
+// Review repeater fields
+define('KELSIE_REVIEW_REPEATER', 'kelsie_reviews');
+define('KELSIE_REVIEW_BODY', 'review_body');
+define('KELSIE_REVIEW_NAME', 'reviewer_name');
+define('KELSIE_REVIEW_ID', 'review_id');
+define('KELSIE_REVIEW_SOURCE', 'review_original_location');
+define('KELSIE_REVIEW_RATING', 'review_rating');
+define('KELSIE_REVIEW_TITLE', 'review_title');
 
 
 
@@ -73,6 +82,95 @@ add_action( 'init', function () {
             'show_in_rest' => true,
         ]
     );
+});
+
+add_action('acf/init', function () {
+    if (!function_exists('acf_add_local_field_group')) {
+        return;
+    }
+
+    acf_add_local_field_group([
+        'key' => 'group_kelsie_reviews',
+        'title' => 'Review Items',
+        'fields' => [
+            [
+                'key' => 'field_kelsie_reviews',
+                'label' => 'Reviews',
+                'name' => KELSIE_REVIEW_REPEATER,
+                'type' => 'repeater',
+                'layout' => 'row',
+                'button_label' => 'Add Review',
+                'sub_fields' => [
+                    [
+                        'key' => 'field_kelsie_review_body',
+                        'label' => 'Review Body',
+                        'name' => KELSIE_REVIEW_BODY,
+                        'type' => 'textarea',
+                        'required' => 1,
+                        'rows' => 4,
+                    ],
+                    [
+                        'key' => 'field_kelsie_reviewer_name',
+                        'label' => 'Reviewer Name',
+                        'name' => KELSIE_REVIEW_NAME,
+                        'type' => 'text',
+                        'required' => 1,
+                    ],
+                    [
+                        'key' => 'field_kelsie_review_id',
+                        'label' => 'Review ID',
+                        'name' => KELSIE_REVIEW_ID,
+                        'type' => 'text',
+                        'required' => 0,
+                        'wrapper' => [
+                            'class' => 'acf-hide',
+                        ],
+                    ],
+                    [
+                        'key' => 'field_kelsie_review_source',
+                        'label' => 'Original Location (URL)',
+                        'name' => KELSIE_REVIEW_SOURCE,
+                        'type' => 'url',
+                        'required' => 0,
+                        'wrapper' => [
+                            'class' => 'acf-hide',
+                        ],
+                    ],
+                    [
+                        'key' => 'field_kelsie_review_rating',
+                        'label' => 'Rating (1–5)',
+                        'name' => KELSIE_REVIEW_RATING,
+                        'type' => 'number',
+                        'required' => 0,
+                        'min' => 1,
+                        'max' => 5,
+                        'step' => 1,
+                        'wrapper' => [
+                            'class' => 'acf-hide',
+                        ],
+                    ],
+                    [
+                        'key' => 'field_kelsie_review_title',
+                        'label' => 'Review Title (optional)',
+                        'name' => KELSIE_REVIEW_TITLE,
+                        'type' => 'text',
+                        'required' => 0,
+                    ],
+                ],
+            ],
+        ],
+        'location' => [
+            [
+                [
+                    'param' => 'block',
+                    'operator' => '==',
+                    'value' => KELSIE_BLOCK_NAME,
+                ],
+            ],
+        ],
+        'position' => 'acf_after_title',
+        'hide_on_screen' => ['the_content'],
+    ]);
 });
 
 
