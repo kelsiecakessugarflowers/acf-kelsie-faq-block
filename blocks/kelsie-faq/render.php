@@ -25,7 +25,7 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
     if ( ! empty( $block['className'] ) ) $class_name .= ' ' . $block['className'];
     if ( ! empty( $block['align'] ) )     $class_name .= ' align' . $block['align'];
 
-    // 2) Choose source: post repeater first, fallback to options
+    // 2) Choose source: block repeater first, fallback to options
     $context_id       = null;
     $source           = null;
     $block_context_id = $block['id'] ?? null;
