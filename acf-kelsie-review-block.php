@@ -156,7 +156,10 @@ add_action( 'plugins_loaded', function () {
         }
 
         if ( ! empty( $reviews ) ) {
-            $data[ KELSIE_SCHEMA_KEY ] = array_values( $reviews ); // append, don’t overwrite
+            foreach ( $reviews as $index => $review ) {
+                // Rank Math runs array_values() when building @graph; add each review individually.
+                $data[ KELSIE_SCHEMA_KEY . '_' . $index ] = $review;
+            }
         }
 
         return $data;
