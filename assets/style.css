@@ -43,10 +43,9 @@
 /* Reviewer name at the bottom */
 .kelsie-review__byline {
   margin-top: 1.25rem;
-  font-size: 0.95rem;
-  color: #6B7B65; /* muted sage */
+  font-size: 1rem;
+  color: #2A1F1A
   font-style: normal;
-  order: 99; /* ensures it sits at the bottom */
 }
 
 /* Empty message */
