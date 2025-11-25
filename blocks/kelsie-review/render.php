@@ -99,7 +99,9 @@ function kelsie_render_review_block( $block, $content = '', $is_preview = false 
     }
 
     if ( empty( $items ) ) {
-        echo '<div class="kelsie-review-list__empty"><em>No reviews available.</em></div>';
+        if ( ! empty( $is_preview ) ) {
+            echo '<div class="kelsie-review-list__empty"><em>No reviews available. Add at least one review with a body and reviewer name.</em></div>';
+        }
         return;
     }
 
@@ -108,6 +110,7 @@ function kelsie_render_review_block( $block, $content = '', $is_preview = false 
         echo '<div style="font:12px/1.4 system-ui;opacity:.75;margin-bottom:.5rem;">Rendering reviews from <strong>'
            . esc_html( 'post' === $source ? 'this post' : 'Options Page' )
            . '</strong>.</div>';
+        echo '<div style="font:12px/1.4 system-ui;opacity:.65;margin-bottom:.75rem;">Only rows with both a review body and reviewer name appear on the frontend.</div>';
     }
     ?>
 
