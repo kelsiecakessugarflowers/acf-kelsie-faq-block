@@ -50,6 +50,7 @@
 	text-transform: uppercase;
   font-family:'source serif 4', serif;
 		font-weight:200;
+	padding-left:.5em;
 }
 
 /* Empty message */
