@@ -8,7 +8,7 @@
     const list   = blockEl.querySelector('.kelsie-faq-list__items');
     const items  = list ? Array.from(list.querySelectorAll('.kelsie-faq-list__item')) : [];
     const select = blockEl.querySelector('.kelsie-faq-list__filter');
-    const search = blockEl.querySelector('.kelsie-faq-list__search');
+    const search = blockEl.querySelector('[data-faq-search]');
     const count  = blockEl.querySelector('.kelsie-faq-list__count');
 
     if (!list || !items.length) return;
@@ -80,6 +80,13 @@
     if (select) select.addEventListener('change', applyFilter);
     if (search) {
       let t;
+      search.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          event.stopPropagation();
+          applyFilter();
+        }
+      });
       search.addEventListener('input', () => {
         clearTimeout(t);
         t = setTimeout(applyFilter, 120);

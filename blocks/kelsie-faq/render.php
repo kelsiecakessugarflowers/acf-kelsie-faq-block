@@ -178,8 +178,10 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
 
             <label class="kelsie-faq-list__control">
                 <span class="kelsie-faq-list__control-label">Search</span>
-                <input type="search"
+                <input type="text"
                     class="kelsie-faq-list__search"
+                    inputmode="search"
+                    data-faq-search="true"
                     placeholder="Type to filter…"
                     autocomplete="off"
                     spellcheck="false"
