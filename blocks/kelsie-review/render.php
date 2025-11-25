@@ -26,8 +26,10 @@ function kelsie_render_review_block( $block, $content = '', $is_preview = false 
     }
 
     // 1) Wrapper attributes
-    $block_id   = 'review-list-' . ( $block['id'] ?? uniqid() );
-    $anchor     = ! empty( $block['anchor'] ) ? $block['anchor'] : $block_id;
+    $block_id    = 'review-list-' . ( $block['id'] ?? uniqid() );
+    $anchor_raw  = ! empty( $block['anchor'] ) ? $block['anchor'] : $block_id;
+    $anchor_safe = sanitize_title( $anchor_raw );
+    $anchor      = $anchor_safe ? $anchor_safe : sanitize_title( $block_id );
     $class_name = 'kelsie-review-list';
     if ( ! empty( $block['className'] ) ) {
         $class_name .= ' ' . $block['className'];
