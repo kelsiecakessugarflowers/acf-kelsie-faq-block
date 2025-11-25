@@ -243,22 +243,47 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
 
         <?php
         // 7) JSON-LD (plain text only for safety)
-        $ld = [
-            '@context'    => 'https://schema.org',
-            '@type'       => 'FAQPage',
-            'mainEntity'  => array_values(array_map(function($it) {
-                return [
-                    '@type' => 'Question',
-                    'name'  => wp_strip_all_tags($it['question']),
-                    'acceptedAnswer' => [
-                        '@type' => 'Answer',
-                        'text'  => wp_strip_all_tags($it['answer']),
-                    ],
-                ];
-            }, $items)),
-        ];
+        $rank_math_schema_enabled = defined('RANK_MATH_VERSION') && apply_filters('kelsie_faq_rank_math_schema_enabled', true);
+        $schema_preference        = function_exists('get_option') ? get_option('kelsie_faq_schema_source', '') : '';
+        $default_schema_source    = $rank_math_schema_enabled ? 'rank-math' : 'inline';
+
+        $schema_source = $schema_preference ?: $default_schema_source;
+        $schema_source = apply_filters(
+            'kelsie_faq_schema_source',
+            $schema_source,
+            [
+                'rank_math_active'         => defined('RANK_MATH_VERSION'),
+                'rank_math_schema_enabled' => $rank_math_schema_enabled,
+                'context_id'               => $context_id,
+                'source'                   => $source,
+                'items_count'              => count($items),
+            ]
+        );
+
+        if ( ! in_array($schema_source, ['inline', 'rank-math', 'both'], true) ) {
+            $schema_source = $default_schema_source;
+        }
+
+        if ( 'rank-math' !== $schema_source ) {
+            $ld = [
+                '@context'    => 'https://schema.org',
+                '@type'       => 'FAQPage',
+                'mainEntity'  => array_values(array_map(function($it) {
+                    return [
+                        '@type' => 'Question',
+                        'name'  => wp_strip_all_tags($it['question']),
+                        'acceptedAnswer' => [
+                            '@type' => 'Answer',
+                            'text'  => wp_strip_all_tags($it['answer']),
+                        ],
+                    ];
+                }, $items)),
+            ];
+            ?>
+            <script type="application/ld+json"><?php echo wp_json_encode( $ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?></script>
+            <?php
+        }
         ?>
-        <script type="application/ld+json"><?php echo wp_json_encode( $ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?></script>
     </section>
     <?php
 }

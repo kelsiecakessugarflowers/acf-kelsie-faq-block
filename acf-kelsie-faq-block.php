@@ -82,6 +82,10 @@ add_action( 'init', function () {
 add_action('plugins_loaded', function () {
     if (!defined('RANK_MATH_VERSION')) return;
 
+    if (false === apply_filters('kelsie_faq_rank_math_schema_enabled', true)) {
+        return;
+    }
+
     add_filter('rank_math/json_ld', function ($data, $jsonld) {
         if (!is_singular()) return $data;
 
