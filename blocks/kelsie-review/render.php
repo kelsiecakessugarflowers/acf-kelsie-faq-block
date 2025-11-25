@@ -66,6 +66,11 @@ if ( ! function_exists( 'kelsie_render_review_block' ) ) {
         return;
     }
 
+    $base_url = function_exists( 'kelsie_get_review_base_url' ) ? kelsie_get_review_base_url( $context_id ) : get_permalink( $context_id );
+    if ( ! $base_url ) {
+        $base_url = home_url( '/' );
+    }
+
     // 3) Collect rows -> normalized items
     $items = [];
     while ( have_rows( KELSIE_REVIEW_REPEATER, $context_id ) ) {
@@ -143,15 +148,17 @@ if ( ! function_exists( 'kelsie_render_review_block' ) ) {
         <?php
         // 4) JSON-LD fallback only when Rank Math is inactive to avoid duplicate schema
         if ( ! defined( 'RANK_MATH_VERSION' ) ) {
-            $item_reviewed = [
-                '@type' => 'CreativeWork',
-                '@id'   => esc_url_raw( get_permalink( $context_id ) . '#item' ),
-                'name'  => wp_strip_all_tags( get_the_title( $context_id ) ),
-                'url'   => get_permalink( $context_id ),
-            ];
+            $item_reviewed = function_exists( 'kelsie_get_item_reviewed_schema' )
+                ? kelsie_get_item_reviewed_schema( $context_id )
+                : [
+                    '@type' => 'Organization',
+                    '@id'   => esc_url_raw( untrailingslashit( $base_url ) . '#item' ),
+                    'name'  => wp_strip_all_tags( get_bloginfo( 'name' ) ),
+                    'url'   => $base_url,
+                ];
 
             $ld_reviews = array_map(
-                function ( $item ) use ( $context_id, $item_reviewed ) {
+                function ( $item ) use ( $context_id, $item_reviewed, $base_url ) {
                     $review = [
                         '@type'        => 'Review',
                         'reviewBody'   => wp_strip_all_tags( $item['body_plain'] ),
@@ -180,7 +187,7 @@ if ( ! function_exists( 'kelsie_render_review_block' ) ) {
                     }
 
                     if ( ! empty( $item['review_id'] ) ) {
-                        $review['@id'] = esc_url_raw( get_permalink( $context_id ) . '#review-' . $item['review_id'] );
+                        $review['@id'] = esc_url_raw( untrailingslashit( $base_url ) . '#review-' . $item['review_id'] );
                     }
 
                     return $review;

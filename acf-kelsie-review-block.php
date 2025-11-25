@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kelsie ACF Reviews Block
  * Description: ACF block for displaying Reviews repeater content with optional Rank Math schema integration.
- * Version:     1.1.3
+ * Version:     1.1.4
  * Author:      Kelsie Cakes
  */
 
@@ -65,6 +65,87 @@ add_action( 'init', function () {
     );
 });
 
+/**
+ * Build the base URL for schema anchors.
+ *
+ * @param int|string $context_id Post ID or 'option'.
+ *
+ * @return string
+ */
+function kelsie_get_review_base_url( $context_id ) {
+    $base_url = '';
+
+    if ( $context_id && 'option' !== $context_id ) {
+        $base_url = get_permalink( $context_id );
+    }
+
+    if ( ! $base_url ) {
+        $base_url = home_url( '/' );
+    }
+
+    return $base_url;
+}
+
+/**
+ * Build the itemReviewed object for JSON-LD output.
+ *
+ * Prefers business option fields when available, falling back to site info.
+ *
+ * @param int|string $context_id Post ID or 'option'.
+ *
+ * @return array
+ */
+function kelsie_get_item_reviewed_schema( $context_id ) {
+    $base_url = kelsie_get_review_base_url( $context_id );
+
+    $site_name = wp_strip_all_tags( get_bloginfo( 'name' ) );
+    $site_url  = home_url( '/' );
+
+    $business_name = '';
+    $business_url  = '';
+    $address       = [];
+
+    if ( function_exists( 'get_field' ) ) {
+        $business_name = get_field( 'business_name', KELSIE_OPTIONS_ID );
+        $business_url  = get_field( 'business_url', KELSIE_OPTIONS_ID );
+        $address       = [
+            'streetAddress'   => get_field( 'business_street', KELSIE_OPTIONS_ID ),
+            'addressLocality' => get_field( 'business_city', KELSIE_OPTIONS_ID ),
+            'addressRegion'   => get_field( 'business_region', KELSIE_OPTIONS_ID ),
+            'postalCode'      => get_field( 'business_postcode', KELSIE_OPTIONS_ID ),
+            'addressCountry'  => get_field( 'business_country', KELSIE_OPTIONS_ID ),
+        ];
+    }
+
+    $name = $business_name ? wp_strip_all_tags( $business_name ) : $site_name;
+    $url  = $business_url ? esc_url_raw( $business_url ) : $site_url;
+
+    $clean_address = array_filter(
+        array_map(
+            static function ( $value ) {
+                return is_string( $value ) ? trim( $value ) : '';
+            },
+            $address
+        ),
+        static function ( $value ) {
+            return '' !== $value;
+        }
+    );
+
+    $schema = [
+        '@type' => ! empty( $clean_address ) ? 'LocalBusiness' : 'Organization',
+        '@id'   => esc_url_raw( untrailingslashit( $base_url ) . '#item' ),
+        'name'  => $name,
+        'url'   => $url,
+    ];
+
+    if ( 'LocalBusiness' === $schema['@type'] && ! empty( $clean_address ) ) {
+        $schema['address'] = array_merge( [ '@type' => 'PostalAddress' ], $clean_address );
+    }
+
+    return $schema;
+}
+
 
 /** ---------------------------
  *  Rank Math integration (optional)
@@ -97,12 +178,8 @@ add_action( 'plugins_loaded', function () {
             return $data;
         }
 
-        $item_reviewed = [
-            '@type' => 'CreativeWork',
-            '@id'   => esc_url_raw( get_permalink( $post ) . '#item' ),
-            'name'  => wp_strip_all_tags( get_the_title( $post ) ),
-            'url'   => get_permalink( $post ),
-        ];
+        $item_reviewed = kelsie_get_item_reviewed_schema( $post->ID );
+        $base_url      = kelsie_get_review_base_url( $post->ID );
 
         $reviews = [];
 
@@ -149,7 +226,7 @@ add_action( 'plugins_loaded', function () {
             }
 
             if ( $review_id ) {
-                $review['@id'] = esc_url_raw( get_permalink( $post ) . '#review-' . sanitize_title( $review_id ) );
+                $review['@id'] = esc_url_raw( untrailingslashit( $base_url ) . '#review-' . sanitize_title( $review_id ) );
             }
 
             $reviews[] = $review;
