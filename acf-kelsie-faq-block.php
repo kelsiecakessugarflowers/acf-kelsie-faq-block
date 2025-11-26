@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kelsie ACF FAQ Block
  * Description: ACF block for FAQ repeater with optional Rank Math schema for FAQ page and using inside blocks.
- * Version:     1.0.8
+ * Version:     1.0.9
  * Author:      Kelsie Cakes
  */
 
@@ -11,8 +11,8 @@ if (!defined('ABSPATH')) exit;
 /** ---------------------------
  *  CONFIG (edit in one place)
  * --------------------------- */
-define('KELSIE_BLOCK_DIR', __DIR__ . '/blocks/kelsie-faq');
-define('KELSIE_BLOCK_NAME', 'kelsiecakes/faq-list');    // block.json "name"
+define('KELSIE_FAQ_BLOCK_DIR', __DIR__ . '/blocks/kelsie-faq');
+define('KELSIE_FAQ_BLOCK_NAME', 'kelsiecakes/faq-list');    // block.json "name"
 
 define('KELSIE_FAQ_REPEATER', 'faq_acf_repeater');      // repeater
 define('KELSIE_FAQ_QUESTION', 'faq_question');          // sub field (Text)
@@ -55,7 +55,7 @@ add_action('init', function () {
 
 add_action('acf/init', function () {
     if (function_exists('register_block_type_from_metadata')) {
-        register_block_type_from_metadata(KELSIE_BLOCK_DIR);
+        register_block_type_from_metadata(KELSIE_FAQ_BLOCK_DIR);
     }
 });
 
@@ -88,7 +88,7 @@ add_action('plugins_loaded', function () {
         if (!is_singular()) return $data;
 
         global $post;
-        if (!$post || !function_exists('has_block') || !has_block(KELSIE_BLOCK_NAME, $post)) {
+        if (!$post || !function_exists('has_block') || !has_block(KELSIE_FAQ_BLOCK_NAME, $post)) {
             return $data;
         }
         if (!function_exists('have_rows')) return $data; // ACF off
