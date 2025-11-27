@@ -244,28 +244,13 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
 
         <?php
         // 7) JSON-LD (plain text only for safety)
-        $rank_math_schema_enabled = defined('RANK_MATH_VERSION') && apply_filters('kelsie_faq_rank_math_schema_enabled', true);
-        $schema_preference        = function_exists('get_option') ? get_option('kelsie_faq_schema_source', '') : '';
-        $default_schema_source    = $rank_math_schema_enabled ? 'rank-math' : 'inline';
+        $schema_source = kelsie_faq_get_schema_source([
+            'context_id'  => $context_id,
+            'source'      => $source,
+            'items_count' => count($items),
+        ]);
 
-        $schema_source = $schema_preference ?: $default_schema_source;
-        $schema_source = apply_filters(
-            'kelsie_faq_schema_source',
-            $schema_source,
-            [
-                'rank_math_active'         => defined('RANK_MATH_VERSION'),
-                'rank_math_schema_enabled' => $rank_math_schema_enabled,
-                'context_id'               => $context_id,
-                'source'                   => $source,
-                'items_count'              => count($items),
-            ]
-        );
-
-        if ( ! in_array($schema_source, ['inline', 'rank-math', 'both'], true) ) {
-            $schema_source = $default_schema_source;
-        }
-
-        if ( 'rank-math' !== $schema_source ) {
+        if ( 'inline' === $schema_source ) {
             $ld = [
                 '@context'    => 'https://schema.org',
                 '@type'       => 'FAQPage',

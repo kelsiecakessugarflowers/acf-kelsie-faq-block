@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kelsie ACF FAQ Block
  * Description: ACF block for FAQ repeater with optional Rank Math schema for FAQ page and using inside blocks.
- * Version:     1.0.9
+ * Version:     1.0.10
  * Author:      Kelsie Cakes
  */
 
@@ -24,6 +24,38 @@ define('KELSIE_FAQ_TAX', 'faq-category');      // actual taxonomy slug
 
 define('KELSIE_OPTIONS_ID',   'option');                // ACF Options Page id
 define('KELSIE_SCHEMA_KEY',   'kelsie_faq');            // array key in Rank Math graph
+
+if (!function_exists('kelsie_faq_get_schema_source')) {
+    /**
+     * Decide which schema provider should render FAQ structured data.
+     *
+     * @param array $context Optional context (source, context_id, items_count, rank_math_active, rank_math_schema_enabled).
+     * @return string        Either 'rank-math' or 'inline'.
+     */
+    function kelsie_faq_get_schema_source(array $context = []) {
+        $rank_math_active         = $context['rank_math_active'] ?? defined('RANK_MATH_VERSION');
+        $rank_math_schema_enabled = $context['rank_math_schema_enabled'] ?? apply_filters('kelsie_faq_rank_math_schema_enabled', true);
+
+        $schema_preference     = function_exists('get_option') ? get_option('kelsie_faq_schema_source', '') : '';
+        $default_schema_source = ($rank_math_active && $rank_math_schema_enabled) ? 'rank-math' : 'inline';
+
+        $schema_source = $schema_preference ?: $default_schema_source;
+
+        $schema_source = apply_filters(
+            'kelsie_faq_schema_source',
+            $schema_source,
+            array_merge(
+                [
+                    'rank_math_active'         => $rank_math_active,
+                    'rank_math_schema_enabled' => $rank_math_schema_enabled,
+                ],
+                $context
+            )
+        );
+
+        return ('rank-math' === $schema_source) ? 'rank-math' : 'inline';
+    }
+}
 
 add_action('admin_init', function () {
     if (!class_exists('ACF') && current_user_can('activate_plugins')) {
@@ -121,9 +153,21 @@ add_action('plugins_loaded', function () {
             }
         }
 
-        if (!empty($faq['mainEntity'])) {
-            $data[KELSIE_SCHEMA_KEY] = $faq; // append, don’t overwrite
+        if (empty($faq['mainEntity'])) {
+            return $data;
         }
+
+        $schema_source = kelsie_faq_get_schema_source([
+            'context_id' => $source[1],
+            'source'     => ($source[1] === KELSIE_OPTIONS_ID) ? 'option' : 'post',
+            'items_count'=> count($faq['mainEntity']),
+        ]);
+
+        if ('rank-math' !== $schema_source) {
+            return $data;
+        }
+
+        $data[KELSIE_SCHEMA_KEY] = $faq; // append, don’t overwrite
 
         return $data;
     }, 20, 2);
