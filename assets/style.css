@@ -143,17 +143,30 @@
   opacity: .8;
 }
 
-.kelsie-faq-list__answer a,
-.kelsie-faq-list__answer .wp-element-button {
+.kelsie-faq-list .kelsie-faq-list__answer a,
+.kelsie-faq-list .kelsie-faq-list__answer .wp-element-button {
   display: inline-block;
   padding: 0.65rem 1rem;
-  background: #916379;
-  color: #fff;
-  border-radius: 0px;
+  background-color: #916379;
+  border: 1px solid #916379;
+  color: #fff !important;
+  border-radius: 0;
   text-decoration: none;
-  font-weight: 400;
+  font-weight: 600;
+  transition: background-color .2s ease, color .2s ease, outline-color .2s ease;
 }
-.kelsie-faq-list__answer a:hover,
-.kelsie-faq-list__answer .wp-element-button:hover {
-  background: #854767;
+
+.kelsie-faq-list .kelsie-faq-list__answer a:visited,
+.kelsie-faq-list .kelsie-faq-list__answer .wp-element-button:visited {
+  color: #fff !important;
+}
+
+.kelsie-faq-list .kelsie-faq-list__answer a:hover,
+.kelsie-faq-list .kelsie-faq-list__answer .wp-element-button:hover,
+.kelsie-faq-list .kelsie-faq-list__answer a:focus-visible,
+.kelsie-faq-list .kelsie-faq-list__answer .wp-element-button:focus-visible {
+  background-color: #854767;
+  color: #fff !important;
+  outline: 2px solid #2A1F1A;
+  outline-offset: 2px;
 }
