@@ -163,7 +163,7 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
     }
     ?>
 
-    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr($class_name); ?>" itemscope itemtype="https://schema.org/FAQPage">
+    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr($class_name); ?>">
 
         <!-- Toolbar: Category, Search, Count (local-only; no form/role to avoid 3rd-party search hijacks) -->
         <div class="kelsie-faq-list__toolbar" aria-label="FAQ filters">
@@ -217,18 +217,12 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
             <details class="kelsie-faq-list__item"
                      id="<?php echo $panel_id; ?>"
                      role="listitem"
-                     data-cats="<?php echo esc_attr($cat_attr); ?>"
-                     itemscope
-                     itemprop="mainEntity"
-                     itemtype="https://schema.org/Question">
-                <summary id="<?php echo $summary_id; ?>" class="kelsie-faq-list__question" itemprop="name">
+                     data-cats="<?php echo esc_attr($cat_attr); ?>">
+                <summary id="<?php echo $summary_id; ?>" class="kelsie-faq-list__question">
                     <?php echo esc_html($q); ?>
                 </summary>
-                <div class="kelsie-faq-list__answer"
-                     itemscope
-                     itemprop="acceptedAnswer"
-                     itemtype="https://schema.org/Answer">
-                    <div class="kelsie-faq-list__answer-inner" itemprop="text">
+                <div class="kelsie-faq-list__answer">
+                    <div class="kelsie-faq-list__answer-inner">
                         <?php echo wp_kses_post( $a_html ?: '<p>(No answer yet.)</p>' ); ?>
                     </div>
                     <?php if ($chips): ?>
@@ -242,34 +236,6 @@ function kelsie_render_faq_block( $block, $content = '', $is_preview = false ) {
             <?php endforeach; ?>
         </div>
 
-        <?php
-        // 7) JSON-LD (plain text only for safety)
-        $schema_source = kelsie_faq_get_schema_source([
-            'context_id'  => $context_id,
-            'source'      => $source,
-            'items_count' => count($items),
-        ]);
-
-        if ( 'inline' === $schema_source ) {
-            $ld = [
-                '@context'    => 'https://schema.org',
-                '@type'       => 'FAQPage',
-                'mainEntity'  => array_values(array_map(function($it) {
-                    return [
-                        '@type' => 'Question',
-                        'name'  => wp_strip_all_tags($it['question']),
-                        'acceptedAnswer' => [
-                            '@type' => 'Answer',
-                            'text'  => wp_strip_all_tags($it['answer']),
-                        ],
-                    ];
-                }, $items)),
-            ];
-            ?>
-            <script type="application/ld+json"><?php echo wp_json_encode( $ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?></script>
-            <?php
-        }
-        ?>
     </section>
     <?php
 }
