@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kelsie ACF FAQ Block
  * Description: ACF block for FAQ repeater with optional Rank Math schema for FAQ page and using inside blocks.
- * Version:     1.0.11
+ * Version:     1.0.12
  * Author:      Kelsie Cakes
  */
 
@@ -114,6 +114,13 @@ add_action('plugins_loaded', function () {
 
     if (false === apply_filters('kelsie_faq_rank_math_schema_enabled', true)) {
         return;
+    }
+
+    if (class_exists('\\RankMath\\Schema\\Block_FAQ')) {
+        remove_filter(
+            'rank_math/schema/block/faq-block',
+            [ \RankMath\Schema\Block_FAQ::get(), 'add_graph' ]
+        );
     }
 
     add_filter('rank_math/json_ld', function ($data, $jsonld) {
